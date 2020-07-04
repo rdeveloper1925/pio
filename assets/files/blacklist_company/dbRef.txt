@@ -1,0 +1,166 @@
+<?php
+class DB{
+    //STANDARD CRUD FUNCTIONS
+    public function select_object($sql){
+        $query = $this->db->query($sql);
+        if($query->num_rows()>0){
+            foreach ($query->result() as $row){
+                echo $row->title;
+                echo $row->name;
+                echo $row->email;
+            }
+        }
+    }
+
+    public function select_array($sql){
+        $query = $this->db->query($sql);
+        if($query->num_rows()>0){
+            foreach ($query->result_array() as $row){
+                echo $row['title'];
+                echo $row['name'];
+                echo $row['email'];
+            }
+        }
+    }
+
+    public function select_one_object($sql){
+        $query=$this->db->query("select name from users where user_id=1");
+        $row=$query->row();
+        echo $row->name;
+    }
+
+    public function select_one_array($sql){
+        $query=$this->db->query("select name from users where user_id=1");
+        $row=$query->row_array();
+        echo $row["name"];
+    }
+
+    public function insert_update_delete($sql){
+        $this->db->query($sql);
+        echo $this->db->affected_rows();
+    }
+
+    //QUERY BUILDER CRUD FUNCTIONS
+    public function insert($data){
+        $data=['name'=>'rodney','age'=>37];
+        $this->db->insert('users',$data); //insert_batch('users',[$data,$data,$data])
+    }
+
+    public function select(){
+        $query=$this->db->get('users');//or get_where('users',['id'=>3])
+        foreach($query->result() as $row){ //or $query->result_array()
+            echo $row->name;
+            echo $row->age;
+        }
+    }
+    /*
+        ---------------------------------
+        $this->db->where(['name'=>'rodney','age'=>56]); == where name='rodney' and 'age'=56
+        $this->db->where(['name !='=>'rodney','age <'=>56]); == where name !='rodney' and age < 56
+        $this->db->where("name = 'rodney' or age < 56"); == produces the direct where clause
+        ---------------------------------
+        $this->db->or_where(['name'=>'rodney','age'=>56]); == where name='rodney' or 'age'=56
+        ---------------------------------
+        $this->db->where_in('name', ['rodney','shariff','jackson']); == where name in ('rodney','shariff','jackson')
+        ---------------------------------
+        $this->db->where_not_in('name', ['rodney','shariff','jackson']); == where name not in ('rodney','shariff','jackson')
+        ---------------------------------
+        $this->db->where('name','rodney);
+        $this->db->update('users',$newData); == update users set <newdata> where name = 'rodney'
+    */
+}
+?>
+
+-------Strong pwd validation---------
+PHP Code:
+<?php
+/**
+ * @author   Natan Felles <natanfelles@gmail.com>
+ */
+defined('BASEPATH') or exit('No direct script access allowed');
+/**
+ * Class Access
+ */
+class Access extends CI_Controller {
+    public function create_account()
+    {
+        if ($this->input->post())
+        {
+            $this->load->library('form_validation');
+            $rules = array(
+                [
+                    'field' => 'password',
+                    'label' => 'Password',
+                    'rules' => 'callback_valid_password',
+                ],
+                [
+                    'field' => 'repeat_password',
+                    'label' => 'Repeat Password',
+                    'rules' => 'matches[password]',
+                ],
+            );
+            $this->form_validation->set_rules($rules);
+            if ($this->form_validation->run())
+            {
+                echo 'Success! Account can be created.';
+            }
+            else
+            {
+                echo 'Error! <ul>' . validation_errors('<li>', '</li>') . '</ul>';
+            }
+        }
+        // Load your views
+    }
+    /**
+     * Validate the password
+     *
+     * @param string $password
+     *
+     * @return bool
+     */
+    public function valid_password($password = '')
+    {
+        $password = trim($password);
+        $regex_lowercase = '/[a-z]/';
+        $regex_uppercase = '/[A-Z]/';
+        $regex_number = '/[0-9]/';
+        $regex_special = '/[!@#$%^&*()\-_=+{};:,<.>§~]/';
+        if (empty($password))
+        {
+            $this->form_validation->set_message('valid_password', 'The {field} field is required.');
+            return FALSE;
+        }
+        if (preg_match_all($regex_lowercase, $password) < 1)
+        {
+            $this->form_validation->set_message('valid_password', 'The {field} field must be at least one lowercase letter.');
+            return FALSE;
+        }
+        if (preg_match_all($regex_uppercase, $password) < 1)
+        {
+            $this->form_validation->set_message('valid_password', 'The {field} field must be at least one uppercase letter.');
+            return FALSE;
+        }
+        if (preg_match_all($regex_number, $password) < 1)
+        {
+            $this->form_validation->set_message('valid_password', 'The {field} field must have at least one number.');
+            return FALSE;
+        }
+        if (preg_match_all($regex_special, $password) < 1)
+        {
+            $this->form_validation->set_message('valid_password', 'The {field} field must have at least one special character.' . ' ' . htmlentities('!@#$%^&*()\-_=+{};:,<.>§~'));
+            return FALSE;
+        }
+        if (strlen($password) < 5)
+        {
+            $this->form_validation->set_message('valid_password', 'The {field} field must be at least 5 characters in length.');
+            return FALSE;
+        }
+        if (strlen($password) > 32)
+        {
+            $this->form_validation->set_message('valid_password', 'The {field} field cannot exceed 32 characters in length.');
+            return FALSE;
+        }
+        return TRUE;
+    }
+  
+} 

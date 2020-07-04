@@ -1,0 +1,1 @@
+<p>Redirects to name search. Please wait....</p>
